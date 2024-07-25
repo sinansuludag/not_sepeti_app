@@ -1,14 +1,13 @@
 class Not {
-  int notID;
-  int kategoriID;
-  String notBaslik;
-  String notIcerik;
-  String notTarih;
-  int notOncelik;
+  int? notID; // Nullable yapıyoruz çünkü otomatik olarak atanabilir
+  late int kategoriID;
+  late String notBaslik;
+  late String notIcerik;
+  late String notTarih;
+  late int notOncelik;
 
-  // Yapıcı metod
   Not({
-    required this.notID,
+    this.notID,
     required this.kategoriID,
     required this.notBaslik,
     required this.notIcerik,
@@ -17,18 +16,22 @@ class Not {
   });
 
   // Map'ten nesneye dönüştürme yapıcı metodu
-  Not.fromMap(Map<String, dynamic> map)
-      : notID = map['notID'] ?? 0,
-        kategoriID = map['kategoriID'] ?? 0,
-        notBaslik = map['notBaslik'] ?? '',
-        notIcerik = map['notIcerik'] ?? '',
-        notTarih = map['notTarih'] ?? '',
-        notOncelik = map['notOncelik'] ?? 0;
+  Not.fromMap(Map<String, dynamic> map) {
+    notID = map['notID'];
+    kategoriID = map['kategoriID'];
+    notBaslik = map['notBaslik'];
+    notIcerik = map['notIcerik'];
+    notTarih = map['notTarih'];
+    notOncelik = map['notOncelik'];
+  }
 
   // Nesneyi Map'e dönüştürme metodu
   Map<String, dynamic> toMap() {
     var map = Map<String, dynamic>();
-    map['notID'] = notID;
+    if (notID != null) {
+      // `notID` null değilse ekleyin
+      map['notID'] = notID;
+    }
     map['kategoriID'] = kategoriID;
     map['notBaslik'] = notBaslik;
     map['notIcerik'] = notIcerik;
