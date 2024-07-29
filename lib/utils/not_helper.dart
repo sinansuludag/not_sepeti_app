@@ -4,8 +4,14 @@ import 'package:sqflite_common/sqlite_api.dart';
 
 class NotHelper implements IDatabaseHelper<Not> {
   @override
-  Future<List<Map<String, dynamic>>> getAll(Database db) async {
-    return await db.query("Not", orderBy: 'notID DESC');
+  Future<List<Not>> getAll(Database db) async {
+    var sonuc = await db.rawQuery(
+        'SELECT * FROM "Not" INNER JOIN "Kategori"ON "Kategori"."kategoriID" = "Not"."kategoriID" ORDER BY "notOncelik" DESC, "notID" DESC;');
+    var notListesi = <Not>[];
+    for (Map<String, dynamic> map in sonuc) {
+      notListesi.add(Not.fromMap(map));
+    }
+    return notListesi;
   }
 
   @override

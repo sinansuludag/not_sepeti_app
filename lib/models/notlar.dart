@@ -1,13 +1,13 @@
 class Not {
   int? notID; // Nullable yapıyoruz çünkü otomatik olarak atanabilir
   late int kategoriID;
+  late String kategoriBaslik;
   late String notBaslik;
   late String notIcerik;
   late String notTarih;
   late int notOncelik;
 
   Not({
-    this.notID,
     required this.kategoriID,
     required this.notBaslik,
     required this.notIcerik,
@@ -19,6 +19,7 @@ class Not {
   Not.fromMap(Map<String, dynamic> map) {
     notID = map['notID'];
     kategoriID = map['kategoriID'];
+    kategoriBaslik = map['kategoriBaslik'];
     notBaslik = map['notBaslik'];
     notIcerik = map['notIcerik'];
     notTarih = map['notTarih'];

@@ -4,8 +4,13 @@ import 'package:sqflite/sqflite.dart';
 
 class KategoriHelper implements IDatabaseHelper<Kategori> {
   @override
-  Future<List<Map<String, dynamic>>> getAll(Database db) async {
-    return await db.query("Kategori");
+  Future<List<Kategori>> getAll(Database db) async {
+    var sonuc = await db.query("Kategori", orderBy: 'kategoriID DESC');
+    var kategoriListesi = <Kategori>[];
+    for (Map<String, dynamic> map in sonuc) {
+      kategoriListesi.add(Kategori.fromMap(map));
+    }
+    return kategoriListesi;
   }
 
   @override

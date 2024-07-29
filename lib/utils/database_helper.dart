@@ -45,7 +45,7 @@ class DatabaseHelper<T> {
     return await openDatabase(path, readOnly: false);
   }
 
-  Future<List<Map<String, dynamic>>> getAll() async {
+  Future<List<T>> getAll() async {
     var db = await _getDatabase();
     return await _strategy.getAll(db);
   }
@@ -65,114 +65,86 @@ class DatabaseHelper<T> {
     var db = await _getDatabase();
     return await _strategy.delete(db, whereClause, whereArgs);
   }
+
+  String dateFormat(DateTime tm) {
+    DateTime today = DateTime.now();
+    Duration oneDay = Duration(days: 1);
+    Duration twoDays = Duration(days: 2);
+    Duration oneWeek = Duration(days: 7);
+    String month;
+
+    // Ay isimlerini belirleme
+    switch (tm.month) {
+      case 1:
+        month = "Ocak";
+        break;
+      case 2:
+        month = "Şubat";
+        break;
+      case 3:
+        month = "Mart";
+        break;
+      case 4:
+        month = "Nisan";
+        break;
+      case 5:
+        month = "Mayıs";
+        break;
+      case 6:
+        month = "Haziran";
+        break;
+      case 7:
+        month = "Temmuz";
+        break;
+      case 8:
+        month = "Ağustos";
+        break;
+      case 9:
+        month = "Eylül";
+        break;
+      case 10:
+        month = "Ekim";
+        break;
+      case 11:
+        month = "Kasım";
+        break;
+      case 12:
+        month = "Aralık";
+        break;
+      default:
+        throw ArgumentError('Invalid month');
+    }
+
+    Duration difference = today.difference(tm);
+
+    // Tarih karşılaştırmaları
+    if (difference.inDays == 0) {
+      return "Bugün";
+    } else if (difference.inDays == 1) {
+      return "Dün";
+    } else if (difference.inDays < 7) {
+      switch (tm.weekday) {
+        case 1:
+          return "Pazartesi";
+        case 2:
+          return "Salı";
+        case 3:
+          return "Çarşamba";
+        case 4:
+          return "Perşembe";
+        case 5:
+          return "Cuma";
+        case 6:
+          return "Cumartesi";
+        case 7:
+          return "Pazar";
+        default:
+          throw ArgumentError('Invalid weekday');
+      }
+    } else if (tm.year == today.year) {
+      return '${tm.day} $month';
+    } else {
+      return '${tm.day} $month ${tm.year}';
+    }
+  }
 }
-
-
-// class DatabaseHelper {
-//   static DatabaseHelper? _databaseHelper;
-//   static Database? _database;
-
-//   factory DatabaseHelper() {
-//     if (_databaseHelper == null) {
-//       _databaseHelper = DatabaseHelper._internal();
-//       return _databaseHelper!;
-//     } else {
-//       return _databaseHelper!;
-//     }
-//   }
-
-//   DatabaseHelper._internal() {}
-
-//   Future<Database> _getDatabase() async {
-//     _database ??= await _initializeDatabase();
-//     return _database!;
-//   }
-
-//   Future<Database> _initializeDatabase() async {
-//     var databasesPath = await getDatabasesPath();
-//     var path = join(databasesPath, "notlar.db");
-//     print("Database path: $path");
-
-//     // Check if the database exists
-//     var exists = await databaseExists(path);
-//     print("Database exists: $exists");
-
-//     if (!exists) {
-//       // Should happen only the first time you launch your application
-//       print("Creating new copy from asset");
-
-//       // Make sure the parent directory exists
-//       try {
-//         await Directory(dirname(path)).create(recursive: true);
-//       } catch (_) {}
-
-//       // Copy from asset
-//       ByteData data =
-//           await rootBundle.load("assets/notlar.db"); // Fix the path here
-//       List<int> bytes =
-//           data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-
-//       // Write and flush the bytes written
-//       await File(path).writeAsBytes(bytes, flush: true);
-//     } else {
-//       print("Opening existing database");
-//     }
-
-//     // Open the database
-//     var db = await openDatabase(path, readOnly: false);
-//     return db; // Return the correct variable here
-//   }
-
-//   Future<List<Map<String, dynamic>>> kategorileriGetir() async {
-//     var db = await _getDatabase();
-//     var sonuc = await db.query("Kategori");
-//     return sonuc;
-//   }
-
-//   Future<int> kategoriEkle(Kategori kategori) async {
-//     var db = await _getDatabase();
-//     var sonuc = await db.insert("Kategori", kategori.toMap());
-//     return sonuc;
-//   }
-
-//   Future<int> kategoriGuncelle(Kategori kategori) async {
-//     var db = await _getDatabase();
-//     var sonuc = await db.update("Kategori", kategori.toMap(),
-//         where: 'kategoriID=?', whereArgs: [kategori.kategoriID]);
-//     return sonuc;
-//   }
-
-//   Future<int> kategoriSil(int kategoriID) async {
-//     var db = await _getDatabase();
-//     var sonuc = await db
-//         .delete("Kategori", where: 'kategoriID=?', whereArgs: [kategoriID]);
-//     return sonuc;
-//   }
-
-// //******************************************************** */
-
-//   Future<List<Map<String, dynamic>>> notlariGetir() async {
-//     var db = await _getDatabase();
-//     var sonuc = await db.query("Not", orderBy: 'notID DESC');
-//     return sonuc;
-//   }
-
-//   Future<int> notEkle(Not not) async {
-//     var db = await _getDatabase();
-//     var sonuc = await db.insert("Not", not.toMap());
-//     return sonuc;
-//   }
-
-//   Future<int> notSil(int notID) async {
-//     var db = await _getDatabase();
-//     var sonuc = await db.delete("Not", where: 'notID=?', whereArgs: [notID]);
-//     return sonuc;
-//   }
-
-//   Future<int> notlariGuncelle(Not not) async {
-//     var db = await _getDatabase();
-//     var sonuc = await db
-//         .update("Not", not.toMap(), where: 'notID=?', whereArgs: [not.notID]);
-//     return sonuc;
-//   }
-// }

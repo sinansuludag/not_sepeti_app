@@ -1,16 +1,20 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
+import 'package:not_sepeti_app/constants/metods_constants.dart';
 import 'package:not_sepeti_app/models/kategori.dart';
-import 'package:not_sepeti_app/utils/Idatabase_helper.dart';
+import 'package:not_sepeti_app/models/notlar.dart';
 import 'package:not_sepeti_app/utils/database_helper.dart';
 import 'package:not_sepeti_app/utils/kategori_helper.dart';
+import 'package:not_sepeti_app/utils/not_helper.dart';
 import 'package:not_sepeti_app/widgets/elevated_button.dart';
 
+// ignore: must_be_immutable
 class NotDetay extends StatefulWidget {
   String baslik;
+  Not duzenlenecekNot;
   NotDetay({
     Key? key,
     required this.baslik,
+    required this.duzenlenecekNot,
   }) : super(key: key);
 
   @override
@@ -20,9 +24,12 @@ class NotDetay extends StatefulWidget {
 class _NotDetayState extends State<NotDetay> {
   var formKey = GlobalKey<FormState>();
   late List<Kategori> tumKategoriler;
-  late DatabaseHelper kategoriDatabaseHelper;
-  int kategoriID = 0;
-  int oncelikID = 0;
+  late DatabaseHelper<Kategori> kategoriDatabaseHelper;
+  late DatabaseHelper<Not> notDatabaseHelper;
+  late int kategoriID;
+  late int oncelikID;
+  String notBaslik = '';
+  String notIcerik = '';
   static var _oncelik = ["Düşük", "Orta", "Yüksek"];
 
   @override
@@ -30,14 +37,30 @@ class _NotDetayState extends State<NotDetay> {
     super.initState();
     tumKategoriler = [];
     kategoriDatabaseHelper = DatabaseHelper<Kategori>(KategoriHelper());
-    kategoriDatabaseHelper.getAll().then(
-      (kategoriIcerenMapListesi) {
-        for (Map<String, dynamic> okunanDeger in kategoriIcerenMapListesi) {
-          tumKategoriler.add(Kategori.fromMap(okunanDeger));
-        }
-        setState(() {});
-      },
-    );
+    notDatabaseHelper = DatabaseHelper<Not>(NotHelper());
+    _kategoriVerileriniGetir();
+
+    if (widget.duzenlenecekNot != null) {
+      kategoriID = widget.duzenlenecekNot.kategoriID;
+      oncelikID = widget.duzenlenecekNot.notOncelik;
+    } else {
+      kategoriID =
+          (tumKategoriler.isNotEmpty ? tumKategoriler.first.kategoriID : 0)!;
+      oncelikID = 0;
+    }
+  }
+
+  Future<void> _kategoriVerileriniGetir() async {
+    List<Kategori> kategoriList = await kategoriDatabaseHelper.getAll();
+    setState(() {
+      tumKategoriler = kategoriList;
+      // Eğer kategoriID geçerli değilse, ilk kategoriyi seç
+      if (!tumKategoriler
+          .any((kategori) => kategori.kategoriID == kategoriID)) {
+        kategoriID =
+            (tumKategoriler.isNotEmpty ? tumKategoriler.first.kategoriID : 0)!;
+      }
+    });
   }
 
   @override
@@ -48,7 +71,7 @@ class _NotDetayState extends State<NotDetay> {
         appBar: AppBar(
           title: Text(widget.baslik),
         ),
-        body: tumKategoriler.length <= 0
+        body: tumKategoriler.isEmpty
             ? const Center(
                 child: CircularProgressIndicator(),
               )
@@ -69,14 +92,28 @@ class _NotDetayState extends State<NotDetay> {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: _buildTextFormField(
-                              hintText: "Not başlığını giriniz",
-                              labelText: "Başlık"),
+                            initialValue:
+                                widget.duzenlenecekNot.notBaslik ?? "",
+                            hintText: "Not başlığını giriniz",
+                            labelText: "Başlık",
+                            onSaved: (value) {
+                              notBaslik = value!;
+                            },
+                            maxLines: 1,
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: _buildTextFormField(
-                              hintText: "Not içeriğini giriniz",
-                              labelText: "İçerik"),
+                            initialValue:
+                                widget.duzenlenecekNot.notIcerik ?? "",
+                            hintText: "Not içeriğini giriniz",
+                            labelText: "İçerik",
+                            onSaved: (value) {
+                              notIcerik = value!;
+                            },
+                            maxLines: 4,
+                          ),
                         ),
                         _buildRowDropDownButton(
                             text: "Öncelik :",
@@ -92,13 +129,11 @@ class _NotDetayState extends State<NotDetay> {
                           alignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             CustomElevatedButton(
-                                title: "Vazgeç",
-                                color: Colors.orangeAccent,
-                                func: () {}),
+                                title: "Vazgeç", func: _geriGel),
                             CustomElevatedButton(
-                                title: "Kaydet",
-                                color: Colors.redAccent,
-                                func: () {}),
+                              title: "Kaydet",
+                              func: _notuKaydet,
+                            ),
                           ],
                         )
                       ],
@@ -127,7 +162,7 @@ class _NotDetayState extends State<NotDetay> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int>(
               items: items,
-              value: value,
+              value: items.any((item) => item.value == value) ? value : null,
               onChanged: (secilenID) {
                 if (secilenID != null) {
                   onChanged(secilenID);
@@ -138,7 +173,7 @@ class _NotDetayState extends State<NotDetay> {
           padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.redAccent, width: 1),
+            border: Border.all(color: Colors.black, width: 1),
             borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
         )
@@ -147,13 +182,26 @@ class _NotDetayState extends State<NotDetay> {
   }
 
   TextFormField _buildTextFormField(
-      {required String hintText, required String labelText}) {
+      {required String initialValue,
+      required String hintText,
+      required String labelText,
+      required FormFieldSetter<String> onSaved,
+      required int maxLines}) {
     return TextFormField(
       decoration: InputDecoration(
-        hintText: hintText,
-        labelText: labelText,
-        border: const OutlineInputBorder(),
-      ),
+          hintText: hintText,
+          labelText: labelText,
+          border: ConstantMetods.buildOutlineInputBorder(Colors.black),
+          enabledBorder: ConstantMetods.buildOutlineInputBorder(Colors.black),
+          focusedBorder: ConstantMetods.buildOutlineInputBorder(Colors.red)),
+      onSaved: onSaved,
+      validator: (String? value) {
+        if (value!.isEmpty) {
+          return "Lütfen bu alanı boş geçmeyiniz";
+        }
+      },
+      initialValue: initialValue,
+      maxLines: maxLines,
     );
   }
 
@@ -180,5 +228,62 @@ class _NotDetayState extends State<NotDetay> {
         );
       },
     ).toList();
+  }
+
+  _geriGel() {
+    Navigator.pop(context);
+  }
+
+  void _notuKaydet() {
+    if (formKey.currentState!.validate()) {
+      formKey.currentState!.save();
+      var suankiTarih = DateTime.now();
+      if (widget.baslik == "Yeni Not") {
+        notDatabaseHelper
+            .insert(Not(
+                kategoriID: kategoriID,
+                notBaslik: notBaslik,
+                notIcerik: notIcerik,
+                notTarih: suankiTarih.toString(),
+                notOncelik: oncelikID))
+            .then(
+          (value) {
+            if (value != 0) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text("Not Eklendi")));
+              formKey.currentState!.reset();
+              setState(() {
+                oncelikID = 0;
+                kategoriID = 0;
+              });
+              Navigator.pop(context, true);
+            }
+          },
+        );
+      } else {
+        notDatabaseHelper.update(
+            Not(
+                kategoriID: kategoriID,
+                notBaslik: notBaslik,
+                notIcerik: notIcerik,
+                notTarih: suankiTarih.toString(),
+                notOncelik: oncelikID),
+            "notID=?",
+            [widget.duzenlenecekNot.notID]).then(
+          (guncellenenID) {
+            if (guncellenenID != 0) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text("Not Güncellendi")));
+              formKey.currentState!.reset();
+              setState(() {
+                oncelikID = 0;
+                kategoriID = 0;
+              });
+              Navigator.pop(context, true);
+            }
+          },
+        );
+      }
+    }
   }
 }

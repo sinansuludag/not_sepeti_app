@@ -39,6 +39,7 @@ dependencies:
   sqflite: ^2.3.3+1
   synchronized: ^3.1.0+1
   path: ^1.9.0
+  async: ^2.11.0
 
 dev_dependencies:
   flutter_test:
@@ -65,7 +66,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/notlar.db  
-  #   - images/a_dot_ham.jpeg
+    - assets/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -78,11 +79,14 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
+  fonts:
+    - family: EduAUVICWANTHand
+      fonts:
+        - asset: assets/fonts/EduAUVICWANTHand-Regular.ttf
+        - asset: assets/fonts/EduAUVICWANTHand-Bold.ttf
+        - asset: assets/fonts/EduAUVICWANTHand-Medium.ttf
+        - asset: assets/fonts/EduAUVICWANTHand-SemiBold.ttf
+          weight: 700  
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:
